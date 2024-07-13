@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Platform</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="bg-primary text-white text-center py-4">
+        <h1>Community Platform</h1>
+    </header>
+    <main class="container mt-5">
+        <h2>Create a New Community</h2>
+        <form id="create-community-form" class="mb-5">
+            <div class="form-group">
+                <input type="text" id="name" class="form-control" placeholder="Community Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="description" class="form-control" placeholder="Community Description" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Community</button>
+        </form>
+        <h2>Communities</h2>
+        <ul id="community-list" class="list-group"></ul>
+    </main>
+    <footer class="bg-primary text-white text-center py-3 mt-auto">
+        <p>&copy; 2024 Community Platform</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('create-community-form');
+            const communityList = document.getElementById('community-list');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('name').value;
+                const description = document.getElementById('description').value;
+                const response = await fetch('/api/communities/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description })
+                });
+                const community = await response.json();
+                addCommunityToDOM(community);
+            });
+
+            async function fetchCommunities() {
+                const response = await fetch('/api/communities');
+                const communities = await response.json();
+                communities.forEach(addCommunityToDOM);
+            }
+
+            function addCommunityToDOM(community) {
+                const li = document.createElement('li');
+                li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+                li.innerHTML = `
+                    <a href="/community.html?id=${community._id}" class="text-decoration-none">${community.name}</a>
+                    <button data-id="${community._id}" class="btn btn-danger delete-btn">Delete</button>
+                `;
+                communityList.appendChild(li);
+            }
+
+            communityList.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const id = e.target.getAttribute('data-id');
+                    await fetch(`/api/communities/${id}`, { method: 'DELETE' });
+                    e.target.parentElement.remove();
+                }
+            });
+
+            fetchCommunities();
+        });
+    </script>
+</body>
+</html>
